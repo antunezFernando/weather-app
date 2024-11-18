@@ -8,18 +8,30 @@ const FAHRENHEIT = "us";
 
 const searchBtn = document.querySelector("#search-btn");
 searchBtn.addEventListener("click", () => {
-    getWeatherReport(...getSearchQuery()).then((report) => {
-        renderReport(report);
-    });
+    const [location, unit] = getSearchQuery();
+    if (location === "") {
+        return;
+    }
+    getWeatherReport(location, unit)
+        .then((report) => {
+            renderReport(report);
+        })
+        .catch((error) => {
+            console.log("Error caught", error);
+        });
 });
 
 async function getWeatherReport(location, unit) {
-    const res = await fetch(
-        `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location}?unitGroup=${unit === "C" ? CELSIUS : FAHRENHEIT}&key=${API_KEY}`,
-    );
-    const json = await res.json();
+    try {
+        const res = await fetch(
+            `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location}?unitGroup=${unit === "C" ? CELSIUS : FAHRENHEIT}&key=${API_KEY}`,
+        );
+        const json = await res.json();
 
-    return getReportObject(json, unit);
+        return getReportObject(json, unit);
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 function getReportObject(json, unit) {
@@ -44,6 +56,11 @@ function getReportObject(json, unit) {
 }
 
 function renderReport(report) {
+    const locationContainer = document.querySelector(".hidden");
+    locationContainer.classList.add("location-container");
+    locationContainer.classList.remove("hidden");
+    const location = document.querySelector("#location-title");
+    location.innerText = report.getLocation();
     const columns = document.querySelectorAll(".day-container");
 
     for (let i = 0; i < 7; i++) {
